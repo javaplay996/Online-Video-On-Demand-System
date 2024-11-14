@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.DianyingCollectionDao">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        a.id as id
+        ,a.dianying_id as dianyingId
+        ,a.yonghu_id as yonghuId
+        ,a.insert_time as insertTime
+        ,a.create_time as createTime
+    </sql>
+    <select id="selectListView" parameterType="map" resultType="com.entity.view.DianyingCollectionView" >
+        SELECT
+        <include refid="Base_Column_List" />
+
+--         级联表的字段
+        ,dianying.dianying_name as dianyingName
+        ,yonghu.yonghu_name as yonghuName
+        ,dianying.dianying_zhuyan as dianyingZhuyan
+        ,dianying.dianying_photo as dianyingPhoto
+        ,dianying.dianying_video as dianyingVideo
+        ,dianying.voting as voting
+        ,dianying.leix_types as leixTypes
+        ,dianying.dianying_content as dianyingContent
+
+        FROM dianying_collection  a
+        left JOIN dianying dianying ON a.dianying_id = dianying.id
+        left JOIN yonghu yonghu ON a.yonghu_id = yonghu.id
+
+        <where>
+            <if test="params.ids != null">
+                and a.id in
+                <foreach item="item" index="index" collection="params.ids" open="(" separator="," close=")">
+                #{item}
+                </foreach>
+            </if>
+            <if test="params.dianyingId != null">
+                and a.dianying_id = #{params.dianyingId}
+            </if>
+            <if test="params.yonghuId != null">
+                and a.yonghu_id = #{params.yonghuId}
+            </if>
+            <if test=" params.insertTimeStart != '' and params.insertTimeStart != null ">
+                <![CDATA[  and UNIX_TIMESTAMP(a.insert_time) >= UNIX_TIMESTAMP(#{params.insertTimeStart}) ]]>
+            </if>
+            <if test=" params.insertTimeEnd != '' and params.insertTimeEnd != null ">
+                <![CDATA[  and UNIX_TIMESTAMP(a.insert_time) <= UNIX_TIMESTAMP(#{params.insertTimeEnd}) ]]>
+            </if>
+
+            <if test=" params.dianyingName != '' and params.dianyingName != null and params.dianyingName != 'null' ">
+                and dianying.dianying_name like CONCAT('%',#{params.dianyingName},'%')
+            </if>
+            <if test=" params.dianyingZhuyan != '' and params.dianyingZhuyan != null and params.dianyingZhuyan != 'null' ">
+                and dianying.dianying_zhuyan like CONCAT('%',#{params.dianyingZhuyan},'%')
+            </if>
+            <if test=" params.dianyingVideo != '' and params.dianyingVideo != null and params.dianyingVideo != 'null' ">
+                and dianying.dianying_video like CONCAT('%',#{params.dianyingVideo},'%')
+            </if>
+            <if test="params.votingStart != null ">
+                <![CDATA[  and dianying.voting >= #{params.votingStart}   ]]>
+            </if>
+            <if test="params.votingEnd != null ">
+                <![CDATA[  and dianying.voting <= #{params.votingEnd}   ]]>
+            </if>
+            <if test="params.leixTypes != null">
+                and dianying.leix_types = #{params.leixTypes}
+            </if>
+
+            <if test=" params.dianyingContent != '' and params.dianyingContent != null and params.dianyingContent != 'null' ">
+                and dianying.dianying_content like CONCAT('%',#{params.dianyingContent},'%')
+            </if>
+        </where>
+        order by a.${params.orderBy} desc
+    </select>
+
+</mapper>
